@@ -1,0 +1,14 @@
+# Firebase
+firebase-key.json
+
+# Text
+Akun_Etherscan.txt
+Etherscan_API_Key.txt
+Firebase_Realtime_Database_URL.txt
+Telegram_Bot_Token.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.env
+venv/
