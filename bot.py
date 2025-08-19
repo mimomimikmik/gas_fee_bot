@@ -42,7 +42,7 @@ def check_gas(context):
             context.bot.send_message(user_id, f"🚀 **Gas Fee ETH {gas} gwei!** Waktu terbaik untuk transaksi!")
 
 # Main
-updater = Updater(TELEGRAM_TOKEN, use_context=True)
+updater = Updater(TELEGRAM_TOKEN)  # Removed use_context=True
 updater.dispatcher.add_handler(CommandHandler("start", start))
 updater.dispatcher.add_handler(CommandHandler("subscribe_free", subscribe_free))
 updater.dispatcher.add_handler(CommandHandler("upgrade_vip", upgrade_vip))
