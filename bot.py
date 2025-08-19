@@ -1,5 +1,5 @@
 import requests
-from telegram.ext import Application, CommandHandler  # Changed Updater to Application
+from telegram.ext import Application, CommandHandler
 import firebase_admin
 from firebase_admin import db
 
@@ -18,7 +18,7 @@ def get_gas_fee():
     response = requests.get(url).json()
     return int(response["result"]["ProposeGasPrice"])
 
-# Bot Commands (async now)
+# Bot Commands
 async def start(update, context):
     await update.message.reply_text("🚀 **Gas Fee Alert Bot**\n\n/subscribe_free - Dapat notif gas fee murah 1x/hari\n/upgrade_vip - Notif real-time + analisis!")
 
@@ -32,28 +32,29 @@ async def upgrade_vip(update, context):
     db.reference(f"users/{user_id}").set({"tier": "vip"})
     await update.message.reply_text("💎 **UPGRADE VIP BERHASIL!**\n\nBayar 5 USDT ke alamat ini: 0x123...\nKirim bukti ke @admin.")
 
-# Check Gas Fee Every 1 Hour (async)
+# Check Gas Fee Every 1 Hour
 async def check_gas(context):
     gas = get_gas_fee()
     if gas < 10:
-        users = db.reference("users").get() or {}  # Handle None case
+        users = db.reference("users").get() or {}
         for user_id, data in users.items():
             await context.bot.send_message(int(user_id), f"🚀 **Gas Fee ETH {gas} gwei!** Waktu terbaik untuk transaksi!")
 
-# Main (using Application instead of Updater)
+# Main
 def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()  # Modern initialization
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # Add command handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("subscribe_free", subscribe_free))
     app.add_handler(CommandHandler("upgrade_vip", upgrade_vip))
     
-    # Schedule gas check
+    # Schedule gas check (only works if PTB installed with [job-queue])
     job_queue = app.job_queue
-    job_queue.run_repeating(check_gas, interval=3600, first=0)
+    if job_queue:  # Check if JobQueue is available
+        job_queue.run_repeating(check_gas, interval=3600, first=0)
+    else:
+        print("Warning: JobQueue not available. Install with 'pip install \"python-telegram-bot[job-queue]\"'")
     
-    # Start polling
     app.run_polling()
 
 if __name__ == "__main__":
