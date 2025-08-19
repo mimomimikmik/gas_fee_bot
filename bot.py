@@ -4,9 +4,9 @@ import firebase_admin
 from firebase_admin import db
 
 # Config
-TELEGRAM_TOKEN = "YOUR_TOKEN"
-ETHERSCAN_API_KEY = "YOUR_ETHERSCAN_KEY"
-FIREBASE_URL = "YOUR_FIREBASE_URL"
+TELEGRAM_TOKEN = "8242252342:AAE8hb-Jgj_bFiSIcC989CHt6ROky1Ev298"
+ETHERSCAN_API_KEY = "CKBY8HQHE9C2U3UPTIFTSAWBSFH12B2VMM"
+FIREBASE_URL = "https://gasfeebot-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 # Init Firebase
 cred = firebase_admin.credentials.Certificate("firebase-key.json")
