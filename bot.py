@@ -1,5 +1,5 @@
 import requests
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Application, CommandHandler  # Changed Updater to Application
 import firebase_admin
 from firebase_admin import db
 
@@ -12,39 +12,49 @@ FIREBASE_URL = "https://gasfeebot-default-rtdb.asia-southeast1.firebasedatabase.
 cred = firebase_admin.credentials.Certificate("firebase-key.json")
 firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_URL})
 
+# Fetch Gas Fee from Etherscan
 def get_gas_fee():
     url = f"https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey={ETHERSCAN_API_KEY}"
     response = requests.get(url).json()
     return int(response["result"]["ProposeGasPrice"])
 
-def start(update, context):
-    update.message.reply_text("🚀 **Gas Fee Alert Bot**\n\n/subscribe_free - Dapat notif gas fee murah 1x/hari\n/upgrade_vip - Notif real-time + analisis!")
+# Bot Commands (async now)
+async def start(update, context):
+    await update.message.reply_text("🚀 **Gas Fee Alert Bot**\n\n/subscribe_free - Dapat notif gas fee murah 1x/hari\n/upgrade_vip - Notif real-time + analisis!")
 
-def subscribe_free(update, context):
+async def subscribe_free(update, context):
     user_id = update.message.chat_id
     db.reference(f"users/{user_id}").set({"tier": "free"})
-    update.message.reply_text("✅ Anda berhasil subscribe! Kami akan mengingatkan Anda saat gas fee < 10 gwei.")
+    await update.message.reply_text("✅ Anda berhasil subscribe! Kami akan mengingatkan Anda saat gas fee < 10 gwei.")
 
-def upgrade_vip(update, context):
+async def upgrade_vip(update, context):
     user_id = update.message.chat_id
     db.reference(f"users/{user_id}").set({"tier": "vip"})
-    update.message.reply_text("💎 **UPGRADE VIP BERHASIL!**\n\nBayar 5 USDT ke alamat ini: 0x123...\nKirim bukti ke @admin.")
+    await update.message.reply_text("💎 **UPGRADE VIP BERHASIL!**\n\nBayar 5 USDT ke alamat ini: 0x123...\nKirim bukti ke @admin.")
 
-def check_gas(context):
+# Check Gas Fee Every 1 Hour (async)
+async def check_gas(context):
     gas = get_gas_fee()
     if gas < 10:
-        users = db.reference("users").get() or {}
+        users = db.reference("users").get() or {}  # Handle None case
         for user_id, data in users.items():
-            context.bot.send_message(int(user_id), f"🚀 **Gas Fee ETH {gas} gwei!** Waktu terbaik untuk transaksi!")
+            await context.bot.send_message(int(user_id), f"🚀 **Gas Fee ETH {gas} gwei!** Waktu terbaik untuk transaksi!")
 
-# Main
-updater = Updater(TELEGRAM_TOKEN)
-updater.dispatcher.add_handler(CommandHandler("start", start))
-updater.dispatcher.add_handler(CommandHandler("subscribe_free", subscribe_free))
-updater.dispatcher.add_handler(CommandHandler("upgrade_vip", upgrade_vip))
+# Main (using Application instead of Updater)
+def main():
+    app = Application.builder().token(TELEGRAM_TOKEN).build()  # Modern initialization
+    
+    # Add command handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("subscribe_free", subscribe_free))
+    app.add_handler(CommandHandler("upgrade_vip", upgrade_vip))
+    
+    # Schedule gas check
+    job_queue = app.job_queue
+    job_queue.run_repeating(check_gas, interval=3600, first=0)
+    
+    # Start polling
+    app.run_polling()
 
-job_queue = updater.job_queue
-job_queue.run_repeating(check_gas, interval=3600, first=0)
-
-updater.start_polling()
-updater.idle()
+if __name__ == "__main__":
+    main()
