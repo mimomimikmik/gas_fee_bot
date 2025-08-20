@@ -1,0 +1,115 @@
+Mendapatkan Infura Project ID untuk Web3 Provider
+====================================================
+payment_processor: https://mainnet.infura.io/v3/f5fb0ce9013649b5a08e1c5e56355516
+
+# Mendapatkan Infura Project ID untuk Web3 Provider
+
+Infura Project ID diperlukan untuk terhubung ke jaringan Ethereum melalui layanan Infura. Berikut cara mendapatkannya:
+
+## Langkah-langkah Mendapatkan Infura Project ID
+
+1. **Daftar Akun Infura**:
+   - Kunjungi [https://infura.io/](https://infura.io/)
+   - Klik "Get Started For Free" dan buat akun
+
+2. **Buat Project Baru**:
+   - Setelah login, klik "Create New Project"
+   - Pilih "Ethereum" sebagai produk
+   - Beri nama project (misal: "GasFeeBot")
+   - Klik "Create"
+
+3. **Dapatkan Project ID dan Secret**:
+   - Di dashboard project, Anda akan melihat:
+     - **PROJECT ID**: String unik untuk project Anda
+     - **PROJECT SECRET** (opsional, untuk keamanan tambahan)
+   - Endpoint akan terlihat seperti: `https://mainnet.infura.io/v3/YOUR_PROJECT_ID`
+
+4. **Pilih Jaringan**:
+   - Infura mendukung berbagai jaringan Ethereum:
+     - Mainnet (jaringan utama)
+     - Goerli, Sepolia (testnet)
+     - Polygon, Arbitrum, Optimism (layer 2)
+
+## Cara Menggunakan di Kode
+
+Ganti placeholder dengan Project ID Anda:
+
+```python
+# Di config.py atau langsung di kode
+INFURA_PROJECT_ID = os.getenv('INFURA_PROJECT_ID', 'your_infura_project_id_here')
+WEB3_PROVIDER = f"https://mainnet.infura.io/v3/{INFURA_PROJECT_ID}"
+
+# Kemudian inisialisasi payment processor
+payment_processor = PaymentProcessor(WEB3_PROVIDER)
+```
+
+## Alternatif ke Infura
+
+Jika Anda ingin alternatif selain Infura:
+
+1. **Alchemy**:
+   - Kunjungi [https://www.alchemy.com/](https://www.alchemy.com/)
+   - Proses pendaftaran serupa dengan Infura
+   - Endpoint: `https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY`
+
+2. **Run Node Sendiri**:
+   - Jalankan node Ethereum sendiri (Geth, Nethermind)
+   - Lebih kompleks tetapi memberikan kontrol penuh
+   - Endpoint: `http://localhost:8545` (default)
+
+3. **Layanan Public RPC**:
+   - Beberapa jaringan menyediakan endpoint public gratis
+   - Contoh: `https://cloudflare-eth.com` (Ethereum Mainnet)
+   - Tidak direkomendasikan untuk production karena keterbatasan
+
+## Keamanan
+
+1. **Simpan Project ID di Environment Variables**:
+   ```bash
+   # Di file .env
+   INFURA_PROJECT_ID=your_actual_project_id_here
+   INFURA_PROJECT_SECRET=your_secret_optional
+   ```
+
+2. **Batasi Akses**:
+   - Di dashboard Infura, Anda bisa membatasi domain yang bisa mengakses
+   - Tambahkan IP whitelist jika diperlukan
+
+3. **Monitor Usage**:
+   - Pantau penggunaan Anda di dashboard Infura
+   - Plan gratis memiliki limit 100,000 request/hari
+
+## Contoh Kode yang Diperbarui
+
+```python
+# Di config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    # ... konfigurasi lainnya ...
+    
+    # Infura Configuration
+    INFURA_PROJECT_ID = os.getenv('INFURA_PROJECT_ID')
+    WEB3_PROVIDER = f"https://mainnet.infura.io/v3/{INFURA_PROJECT_ID}" if INFURA_PROJECT_ID else None
+    
+    # ... konfigurasi lainnya ...
+
+# Di payment_processor.py
+from config import Config
+
+class PaymentProcessor:
+    def __init__(self, web3_provider=None):
+        if web3_provider is None:
+            web3_provider = Config.WEB3_PROVIDER
+        
+        if not web3_provider:
+            raise ValueError("Web3 provider URL is required")
+        
+        self.web3 = Web3(Web3.HTTPProvider(web3_provider))
+        self.firebase = FirebaseService()
+```
+
+Dengan Infura Project ID yang valid, payment processor Anda akan dapat terhubung ke jaringan Ethereum dan memverifikasi transaksi pembayaran dengan benar.
